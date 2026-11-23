@@ -1,0 +1,5 @@
+// maven.google.com serves the same artifacts as google(), which points at dl.google.com
+pluginManagement { repositories { maven { url 'https://maven.google.com' }; mavenCentral(); gradlePluginPortal() } }
+dependencyResolutionManagement { repositories { maven { url 'https://maven.google.com' }; mavenCentral() } }
+rootProject.name = 'NaijaGradJobs'
+include ':app'

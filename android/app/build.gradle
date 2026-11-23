@@ -1,0 +1,19 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'ng.naijagrad.jobs'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'ng.naijagrad.jobs'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+    signingConfigs {
+        // Debug-style key so the APK is installable directly. Replace with your own key for Play Store.
+        release { storeFile file('../release.keystore'); storePassword 'naijagrad'; keyAlias 'naijagrad'; keyPassword 'naijagrad' }
+    }
+    buildTypes { release { signingConfig signingConfigs.release; minifyEnabled false } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets { main { assets.srcDirs = ['../../web'] } }
+}

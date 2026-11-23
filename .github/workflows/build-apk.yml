@@ -1,0 +1,36 @@
+name: Build NaijaGrad Jobs APK
+
+on:
+  push:
+    branches: [ccr-d18e036a-iggjyf]
+    paths: ['android/**', 'web/**', '.github/workflows/build-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - name: Install Android platform + build-tools (SDK is preinstalled on the runner)
+        run: |
+          SDKM=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-34" "build-tools;34.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.10.2' }
+      - name: Create signing key (CI-generated; use your own for Play Store)
+        working-directory: android
+        run: keytool -genkeypair -keystore release.keystore -storepass naijagrad -keypass naijagrad -alias naijagrad -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=NaijaGrad Jobs"
+      - name: Build APK
+        working-directory: android
+        run: gradle --no-daemon assembleRelease
+      # Private: only people with access to the repo can download this (Actions run > Artifacts)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NaijaGradJobs-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
