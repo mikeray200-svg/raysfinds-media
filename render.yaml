@@ -13,6 +13,6 @@ services:
       - key: ACCESS_CODE         # Render generates a random code; read it in the dashboard and type it into the app's Settings
         generateValue: true
       - key: ANTHROPIC_MODEL
-        value: claude-sonnet-5-5
+        value: claude-opus-5-5
       - key: NODE_VERSION
         value: "22"

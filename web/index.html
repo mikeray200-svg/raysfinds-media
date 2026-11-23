@@ -24,7 +24,7 @@ input,textarea,select{width:100%;padding:10px;border:1px solid var(--bd);border-
 .msg{padding:10px;border-radius:8px;margin:8px 0;font-size:14px}.msg.err{background:#fee2e2;color:var(--err)}.msg.ok{background:var(--g2);color:var(--g)}.msg.warn{background:#fef3c7;color:var(--warn)}
 .files div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:r .8s linear infinite;vertical-align:-2px;margin-right:6px}@keyframes r{to{transform:rotate(360deg)}}
-.hide{display:none}pre.cl{white-space:pre-wrap;font:14px/1.4 inherit;background:var(--bg);padding:10px;border-radius:8px}
+.hide{display:none}pre.cl{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.45;background:var(--bg);padding:10px;border-radius:8px}
 </style>
 </head>
 <body>
@@ -52,6 +52,24 @@ async function api(path, opts={}) {
 const run = async fn => { S.busy=true; S.err=''; S.info=''; render(); try { await fn(); } catch(e){ S.err=e.message; } S.busy=false; render(); };
 const busyBtn = (txt) => S.busy ? `<span class="spin"></span>Working… this can take a minute` : txt;
 
+// Phone photos are often 4-10 MB; the AI accepts images up to 5 MB. Resize to max 2000px JPEG.
+async function shrink(file){
+  if(!/^image\//.test(file.type) || file.size < 1.5e6) return file;
+  try {
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); });
+    const k = Math.min(1, 2000/Math.max(img.width,img.height));
+    const c = document.createElement('canvas'); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    const blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));
+    return blob ? new File([blob], file.name.replace(/\.\w+$/,'')+'.jpg', {type:'image/jpeg'}) : file;
+  } catch { return file; }
+}
+function copyText(t){
+  if (window.AndroidBridge?.copy) { AndroidBridge.copy(t); return Promise.resolve(); }
+  if (navigator.clipboard) return navigator.clipboard.writeText(t);
+  const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return Promise.resolve();
+}
+
 // ---- steps ----
 const steps = [['docs','1 Upload'],['profile','2 Details'],['cv','3 CV'],['jobs','4 Jobs']];
 function renderNav(){ $('#nav').innerHTML = steps.map(([k,l])=>{
@@ -69,7 +87,7 @@ function vDocs(){ return `<div class="card"><h2>Upload your documents</h2>
 <p class="mut">🔒 Your documents are sent to the server only to be read, and are not stored there. Your details are kept on this phone.</p>`; }
 function bDocs(){ $('#file').onchange=e=>{S.files=[...S.files,...e.target.files];render()};
   document.querySelectorAll('[data-rm]').forEach(a=>a.onclick=e=>{e.preventDefault();S.files.splice(+a.dataset.rm,1);render()});
-  $('#read').onclick=()=>run(async()=>{ const fd=new FormData(); S.files.forEach(f=>fd.append('files',f,f.name));
+  $('#read').onclick=()=>run(async()=>{ const fd=new FormData(); for (const f of S.files) { const g=await shrink(f); fd.append('files',g,g.name); }
     const {profile}=await (await api('/api/profile/extract',{method:'POST',body:fd})).json();
     profile.email ||= ''; profile.phone ||= ''; S.profile=profile; store.set('profile',profile); S.cv=null; store.set('cv',null); S.step='profile'; S.info='Documents read. Please check the details below.'; }); }
 
@@ -118,7 +136,7 @@ function bJobs(){ $('#srch').onclick=search;
   document.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>{ const j=S.jobs[+b.dataset.ap];
     if(!confirm(j.applyEmail?`Send your CV and a cover letter to ${j.applyEmail} for "${j.title}" at ${j.employer}?`:`Prepare a cover letter for "${j.title}" at ${j.employer}?`)) return;
     run(async()=>{ const r=await (await api('/api/apply',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({profile:S.profile,cv:S.cv,job:j,consent:true})})).json(); S.applied[j.applyUrl]={...r,reason:r.reason}; store.set('applied',S.applied); }) });
-  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{ const t=S.applied[S.jobs[+b.dataset.copy].applyUrl].coverLetter; (navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>{S.info='Copied';render()}).catch(()=>{}) }); }
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{ const t=S.applied[S.jobs[+b.dataset.copy].applyUrl].coverLetter; copyText(t).then(()=>{S.info='Cover letter copied. Paste it into the application form.';render()}).catch(()=>{S.err='Could not copy. Select the text and copy it manually.';render()}) }); }
 
 function vSettings(){ const c=cfg(); return `<div class="card"><h2>Settings</h2>
 <label>Server address<input id="srv" placeholder="https://your-server.example.com" value="${esc(store.get('server',''))}"></label>

@@ -17,6 +17,7 @@ Anything inside an APK can be extracted. So the key lives only on the server (`b
 3. When Render asks for `ANTHROPIC_API_KEY`, paste your key into that secret field (never commit it or send it in chat).
 4. When it is live, open the service → Environment, copy `ACCESS_CODE`, then in the app: ⚙ Settings → server address = your `https://....onrender.com` URL, access code = that value → Save & test.
 5. To let the app email applications for graduates, add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` in the same Environment tab. Without them the app prepares the cover letter for the graduate to send.
+AI model: `claude-opus-5-5` by default (set `ANTHROPIC_MODEL=claude-sonnet-5-5` in Render to halve the cost per graduate). Long web searches are resumed automatically, and if the AI declines a request it is retried on a fallback model server-side.
 Note: the free plan sleeps after inactivity, so the first request can take ~30-60 seconds.
 
 ## 1. Run the backend locally

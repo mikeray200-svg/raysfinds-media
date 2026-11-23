@@ -78,8 +78,14 @@ public class MainActivity extends Activity {
 
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
 
-    /** Saves the generated CV into the phone's Downloads folder. */
     class Bridge {
+        /** file:// pages are not a "secure context", so navigator.clipboard is unavailable. */
+        @JavascriptInterface public void copy(String text) {
+            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("Cover letter", text));
+        }
+
+        /** Saves the generated CV into the phone's Downloads folder. */
         @JavascriptInterface public String savePdf(String name, String base64) {
             try {
                 byte[] bytes = Base64.decode(base64, Base64.DEFAULT);

@@ -66,7 +66,7 @@ app.post('/api/profile/extract', upload.array('files', 10), wrap(async (req, res
     content.push({ type: 'text', text: `(File name above: ${f.originalname})` });
   }
   content.push({ type: 'text', text: 'Extract the profile JSON from these documents.' });
-  const reply = await callClaude({ system: EXTRACT_SYSTEM, content, maxTokens: 4096 });
+  const reply = await callClaude({ system: EXTRACT_SYSTEM, content, maxTokens: 8000 });
   res.json({ profile: extractJson(reply) });
 }));
 
@@ -80,7 +80,7 @@ Reply with a single JSON object, no commentary:
 app.post('/api/cv', wrap(async (req, res) => {
   const { profile } = req.body || {};
   if (!profile) throw httpError(400, 'profile is required');
-  const reply = await callClaude({ system: CV_SYSTEM, content: [{ type: 'text', text: JSON.stringify(profile) }], maxTokens: 3000 });
+  const reply = await callClaude({ system: CV_SYSTEM, content: [{ type: 'text', text: JSON.stringify(profile) }], maxTokens: 8000 });
   res.json({ cv: extractJson(reply) });
 }));
 
@@ -108,8 +108,8 @@ app.post('/api/jobs/search', wrap(async (req, res) => {
   const reply = await callClaude({
     system: JOBS_SYSTEM,
     content: [{ type: 'text', text: `Today is ${new Date().toISOString().slice(0, 10)}. Find open vacancies for: ${JSON.stringify(q)}` }],
-    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8, user_location: { type: 'approximate', country: 'NG' } }],
-    maxTokens: 6000,
+    tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 8, user_location: { type: 'approximate', country: 'NG' } }],
+    maxTokens: 16000,
   });
   const jobs = extractJson(reply);
   res.json({ jobs: (Array.isArray(jobs) ? jobs : []).filter(j => j && j.title && j.applyUrl) });
@@ -122,7 +122,7 @@ async function coverLetter(profile, cv, job) {
   return (await callClaude({
     system: COVER_SYSTEM,
     content: [{ type: 'text', text: JSON.stringify({ profile, cv, job: { title: job.title, employer: job.employer, summary: job.summary } }) }],
-    maxTokens: 800,
+    maxTokens: 4000, effort: 'low',
   })).trim();
 }
 
