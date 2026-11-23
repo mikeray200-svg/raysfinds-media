@@ -19,7 +19,10 @@ npm test                             # 7 tests against a mock Anthropic server
 ```
 Deploy it anywhere that runs Node 20+ (Render, Railway, Fly.io, a VPS). It must be reachable over **https**.
 
-## 2. Build the APK
+## 2. Get the APK (no computer needed)
+Every push to the branch builds the APK on GitHub (`.github/workflows/build-apk.yml`). It is a **private artifact**: log in to GitHub on your phone, open the repo's **Actions** tab, tap the latest green run, and download **NaijaGradJobs-apk** (a zip containing `app-release.apk`). Unzip, open the APK, and allow "install unknown apps" when Android asks. Artifacts expire after 90 days.
+
+## 3. Build the APK yourself (optional)
 Requires JDK 17+, Gradle 8.9+, and the Android SDK (platform 34).
 ```
 cd android
