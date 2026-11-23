@@ -1,0 +1,18 @@
+# One-click deploy: https://dashboard.render.com/blueprint/new?repo=https://github.com/mikeray200-svg/raysfinds-media
+services:
+  - type: web
+    name: naijagrad-jobs-api
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY   # Render asks YOU to type this in a private secret field
+        sync: false
+      - key: ACCESS_CODE         # Render generates a random code; read it in the dashboard and type it into the app's Settings
+        generateValue: true
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
+      - key: NODE_VERSION
+        value: "22"

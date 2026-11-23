@@ -11,7 +11,15 @@ android/   Thin Android WebView wrapper that packages web/ into an APK
 ## Why a backend? (your Anthropic key)
 Anything inside an APK can be extracted. So the key lives only on the server (`backend/.env`), and the APK talks to your server. Set `ACCESS_CODE` so strangers can't spend your credits.
 
-## 1. Run the backend
+## 0. Deploy the backend on Render (recommended)
+1. Get an Anthropic API key: https://console.anthropic.com/settings/keys
+2. Open https://dashboard.render.com/blueprint/new?repo=https://github.com/mikeray200-svg/raysfinds-media , connect GitHub, choose the branch holding this code, and Apply.
+3. When Render asks for `ANTHROPIC_API_KEY`, paste your key into that secret field (never commit it or send it in chat).
+4. When it is live, open the service → Environment, copy `ACCESS_CODE`, then in the app: ⚙ Settings → server address = your `https://....onrender.com` URL, access code = that value → Save & test.
+5. To let the app email applications for graduates, add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` in the same Environment tab. Without them the app prepares the cover letter for the graduate to send.
+Note: the free plan sleeps after inactivity, so the first request can take ~30-60 seconds.
+
+## 1. Run the backend locally
 ```
 cd backend && cp .env.example .env   # fill in ANTHROPIC_API_KEY (+ SMTP_* to enable emailing applications)
 npm install && npm start             # http://localhost:8787 also serves the app UI for testing
